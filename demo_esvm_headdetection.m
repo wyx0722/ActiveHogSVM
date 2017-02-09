@@ -36,6 +36,8 @@ train_params = params;
 train_params.detect_max_scale = 0.5;
 train_params.detect_exemplar_nms_os_threshold = 1.0;
 train_params.detect_max_windows_per_exemplar = 100;
+train_params.train_positives_constant = 5;
+
 [models] = esvm_train_exemplars(initial_models, ...
                                 neg_set, train_params);
 
