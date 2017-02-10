@@ -108,7 +108,8 @@ classdef hit_list
                 rectangle('position',h.bounds(:,i),'edgecolor',color,'linewidth',linewidth,'linestyle',linestyle);
                 if exist('textbg','var')
                     if ~exist('textfg','var')
-                       textfg = [1 1 1];           
+                       textfg = [1 1 1];       
+                       
                     end
                     text(double(h.bounds(1,i)),double(h.bounds(2,i)),num2str(h.score(i),'%4.2f'),'BackgroundColor',textbg,'Color',textfg);
                 end

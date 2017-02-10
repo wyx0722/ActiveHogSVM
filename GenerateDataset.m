@@ -243,6 +243,7 @@ switch dataset
         
     case 'Dataset_RochesterADL' 
     bodypart = label_act;
+    
     if strcmp( train_or_test,'test')
 
         n_subs = 1
@@ -311,9 +312,79 @@ switch dataset
         %     for tt = 1:DataStructure.num_trials
         Ipos = {};
         Ineg = {};
+        ant = {};
         idxp = 1;
         idxn = 1;
-        for aa = 1:2
+        for sub = 1:3
+            obj = load(sprintf([dataset_path,'/Annotation_yzhang_head_subject_%i.mat'],sub));
+            ant1=obj.Annotation;
+            obj = {};
+            ant = [ant;ant1];
+        end
+        DDD = find(~cellfun(@isempty,ant));
+        for ii = 1:length(DDD)
+            image_file_name = ['annotation/',ant{DDD(ii)}.filename];
+            I = imread(image_file_name); 
+            recs.folder = dataset_path;
+            recs.filename = image_file_name;
+            recs.source = label_act;
+            [recs.size.width,recs.size.height,recs.size.depth] = size(I);
+            recs.segmented = 0;
+            recs.imgname = sprintf('%08d',idxp);
+            recs.imgsize = size(I);
+            recs.database = dataset;
+
+            object.class = 'Drink';
+            object.view = '';
+            object.truncated = 0;
+            object.occluded = 0;
+            object.difficult = 0;
+            object.label = 'Drink';
+            object.bbox = [ ant{DDD(ii)}.rect(1),ant{DDD(ii)}.rect(2),...
+                ant{DDD(ii)}.rect(1)+ant{DDD(ii)}.rect(3),...
+                ant{DDD(ii)}.rect(2)+ant{DDD(ii)}.rect(4)]   ;
+            object.bndbox.xmin =object.bbox(1);
+            object.bndbox.ymin =object.bbox(2);
+            object.bndbox.xmax =object.bbox(3);
+            object.bndbox.ymax =object.bbox(4);
+            object.attributes = ant{DDD(ii)}.bodypart;
+            object.polygon = [];
+            recs.objects = [object];
+            if ~using_motion
+                Ipos{ii}.I = I;
+                Ipos{ii}.recs = recs;
+            else
+            %%% if motion is used. Convert a 3-channel
+            %%% image, which are gray-scale image,flowx and
+            %%% flowy respectively.
+
+                I1 = single(rgb2gray(I));
+                [~,image_file_name,~]=fileparts(image_file_name);
+
+                obj = load([workingDir,'/',image_file_name,'_flow.mat']);
+                I2 = single(obj.flow.Vx);
+                I3 = single(obj.flow.Vy);
+                Ipos{ii}.I(:,:,1) = I1;
+                Ipos{ii}.I(:,:,2) = I2;
+                Ipos{ii}.I(:,:,3) = I3;
+                Ipos{ii}.recs = recs;
+            end
+
+
+
+            if is_show
+                figure(1);imshow(I);
+                rectangle('Position',ant{DDD(ii)}.rect,'EdgeColor','yellow','LineWidth',2);
+                drawnow;
+            end
+
+
+        end
+                                
+                                
+                         
+        
+        for aa = 1:10
             for tt = trials:trials
                 for ss = 1:1
 
@@ -323,15 +394,15 @@ switch dataset
                         workingDir = [dataset_path,'/',folders];
                         imageNames = dir(fullfile(workingDir,'*.png'));
                         imageNames = {imageNames.name};
-                        obj = load([workingDir,'/Annotation_torso.mat']);
-                        ant=obj.Annotation;
-                        obj = {};
+%                         obj = load([workingDir,'/Annotation_torso.mat']);
+%                         ant=obj.Annotation;
+%                         obj = {};
                         fprintf('- collect images in video: %s\n',folders); 
                         %%% put the images and annotations to the correct places
                         %%% if the score is larger than thresh,positive; otherwise
                         %%% negative
                         for i = 1:1:length(imageNames)
-                            if ~isempty(ant{i})
+                            if 0
                                 image_file_name = [workingDir,'/',imageNames{i}];
                                 I = imread(image_file_name); 
 
@@ -426,7 +497,7 @@ switch dataset
 end
         
 
-fprintf('Data Collection: %s,  #img_pos=%i,  #img_neg=%i\n',label_act,idxp-1,idxn-1);
+fprintf('Data Collection: %s,  #img_pos=%i,  #img_neg=%i\n',label_act,length(Ipos),length(Ineg));
 
                     
 end
