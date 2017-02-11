@@ -20,7 +20,7 @@ fprintf('Dataset: %s\n',dataset);
 obj = load([dataset_path,'/DataStructure.mat']);
 DataStructure = obj.DataStructure;
 clear obj;
-action_list = importdata([dataset_path,'/action_list.txt']);
+action_list = importdata([dataset_path,'/activity_list.txt']);
 
 switch dataset
     case 'Dataset_MSRActivity3D'
@@ -315,7 +315,7 @@ switch dataset
         ant = {};
         idxp = 1;
         idxn = 1;
-        for sub = 1:3
+        for sub = 1:2
             obj = load(sprintf([dataset_path,'/Annotation_yzhang_head_subject_%i.mat'],sub));
             ant1=obj.Annotation;
             obj = {};
@@ -386,7 +386,7 @@ switch dataset
         
         for aa = 1:10
             for tt = trials:trials
-                for ss = 1:1
+                for ss = 1:2
 
 
                         %%% retrieve the pos images in the current scenario
