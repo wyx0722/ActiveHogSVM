@@ -246,7 +246,7 @@ switch dataset
     
     if strcmp( train_or_test,'test')
 
-        n_subs = 1
+        n_subs = 3
         trials = 3;
         n_acts = 5;
 
@@ -259,8 +259,8 @@ switch dataset
         idxp = 1;
         idxn = 1;
         for aa = 1:10
-            for tt = trials:trials
-                for ss = 1:1
+            for tt = 1:3
+                for ss = 5
 
                     %%% retrieve the pos images in the current scenario
                     folders = sprintf(DataStructure.file_format,action_list{aa},ss,tt);
@@ -315,7 +315,7 @@ switch dataset
         ant = {};
         idxp = 1;
         idxn = 1;
-        for sub = 1:2
+        for sub = [1 2 3 4]
             obj = load(sprintf([dataset_path,'/Annotation_yzhang_head_subject_%i.mat'],sub));
             ant1=obj.Annotation;
             obj = {};
@@ -334,12 +334,12 @@ switch dataset
             recs.imgsize = size(I);
             recs.database = dataset;
 
-            object.class = 'Drink';
+            object.class = 'head';
             object.view = '';
             object.truncated = 0;
             object.occluded = 0;
             object.difficult = 0;
-            object.label = 'Drink';
+            object.label = 'head';
             object.bbox = [ ant{DDD(ii)}.rect(1),ant{DDD(ii)}.rect(2),...
                 ant{DDD(ii)}.rect(1)+ant{DDD(ii)}.rect(3),...
                 ant{DDD(ii)}.rect(2)+ant{DDD(ii)}.rect(4)]   ;
@@ -385,8 +385,8 @@ switch dataset
                          
         
         for aa = 1:10
-            for tt = trials:trials
-                for ss = 1:2
+            for tt = 1:3
+                for ss = 1:4
 
 
                         %%% retrieve the pos images in the current scenario

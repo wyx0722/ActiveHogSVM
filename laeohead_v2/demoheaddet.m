@@ -28,7 +28,7 @@ detthr = -5;
 
 % Load image
 % img = imread('hlayk.jpg');
-img = imread('annotation/Dataset_RochesterADL/drinkWaterS3R1.avi/frame_13.png');
+img = imread('../annotation/Dataset_RochesterADL/drinkWaterS1R1.avi/frame_3.png');
 
 
 %% Run head detector on the whole image: it works better on upper-body areas.

@@ -75,7 +75,8 @@ for i=1:length(config.CLASSES)
     end
 end
 
-config.DATA_DIR = '../data';
+% config.DATA_DIR = '../data';
+config.DATA_DIR = 'poselets_matlab_april2013/data';
 if ~exist(config.DATA_DIR,'file')
    mkdir(config.DATA_DIR);
 end

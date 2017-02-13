@@ -51,7 +51,7 @@ end
 
 % im1.image_file{1}=[data_root '/test.jpg'];
 % img = imread(im1.image_file{1});
-im1.image_file{1} ='/home/yzhang/workspace/ActivityRecognition/annotation/Dataset_RochesterADL/drinkWaterS1R2.avi/frame_27.png'; 
+im1.image_file{1} ='/home/zhang/workspace/ActiveHogSVM/annotation/Dataset_RochesterADL/answerPhoneS3R1.avi/frame_5.png'; 
 img = imread(im1.image_file{1});
 
 
