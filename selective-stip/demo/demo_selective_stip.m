@@ -2,7 +2,7 @@
 % @description : This scripts implements the demo of the interest point
 % with pruning. Please edit the names of the test video if needed.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function demo_selective_stip(isDisplay)
+function corner_points = demo_selective_stip(image_stack,isDisplay)
 
   % Adding search paths
   addpath('../src/');
@@ -18,8 +18,8 @@ function demo_selective_stip(isDisplay)
   block_dim = 3; % Any odd number, but 3 is good choice.
   
   % Loading the test video
-  image_stack = load(test_vid_name);
-  image_stack = image_stack.image_stack;
+%   image_stack = load(test_vid_name);
+%   image_stack = image_stack.image_stack;
 
   tic
     corner_points = FindSelectiveStips(image_stack, sigma_array, alpha, block_dim, bP, gP, temporalScale);
