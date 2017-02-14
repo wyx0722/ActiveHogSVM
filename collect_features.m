@@ -44,25 +44,27 @@ for aa = 1:n_acts
             cube = [];
 %             cubey = [];
             if mod(ii,info.sampling_rate) == 0
-                rect = round(ant_bb{kk}.(bodypart));
-                xmin = rect(1);
-                xmax = rect(1)+rect(3);
-                ymin = rect(2);
-                ymax = rect(2)+rect(4);
-                cube(:,:,1:L+1) = imgseq(ymin:ymax,xmin:xmax,(ii-1):(ii+L-1));
-                [cubex,cubey] = FlowExtractionFromImgSeq(cube);
-                
-                %%% extract the feature here, where we perform dense
-                %%% sampling
-                mbh = ExtractMBH(cubex,cubey); %% the output is N*D matrix, rows are samples, cols are features.
-                
-                %%% todo stack the feature vector to the pool
-                features = [features;mbh];
+                    rect = round(ant_bb{kk}.(bodypart));
+                    xmin = rect(1);
+                    xmax = rect(1)+rect(3);
+                    ymin = rect(2);
+                    ymax = rect(2)+rect(4);
+                    cube(:,:,1:L+1) = imgseq(ymin:ymax,xmin:xmax,(ii-1):(ii+L-1));
+                    [cubex,cubey] = FlowExtractionFromImgSeq(cube);
+
+                    %%% extract the feature here, where we perform dense
+                    %%% sampling
+                    mbh = ExtractMBH(cubex,cubey); %% the output is N*D matrix, rows are samples, cols are features.
+
+                    %%% todo stack the feature vector to the pool
+                    features = [features;mbh];
+               
                 kk = kk+1;
             end
         end
         
-    toc   
+    timer = toc;
+    fprintf('--time cost = %f seconds\n',timer);
     end
 end
 
