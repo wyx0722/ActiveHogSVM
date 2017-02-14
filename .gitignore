@@ -2,3 +2,4 @@
 *.m~
 exemplarsvm/
 SSDPM_v1-1/
+*.mat
