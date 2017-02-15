@@ -10,14 +10,17 @@ n_subs = info.num_subjects;
 n_acts = info.num_activities;
 n_trials = info.num_trials;
 act_list = importdata([ant_path,'/activity_list.txt']);
-fprintf('Dataset: %s\n',dataset);
 
 %%% load feature files
 sub_list = 1:n_subs;
 sub_list(sub_list==subject) = [];
 features = [];
-for ii = sub_list
-  features = [features,importdata(sprintf('denseMBH_rochester_S%i_%s.mat',ii,bodypart)); 
+for ss = sub_list
+  for aa = 1:n_acts
+  for tt = 1:n_trials
+  features = [features;importdata(sprintf('DenseMBH_Rochester/denseMBH_%sS%iR%i_%s.mat',act_list{aa}, ss,tt,bodypart))]; 
+  end
+  end
 end
 
 fprintf('-- #features=%i, feature_length=%i\n',size(features,1),size(features,2));
@@ -34,7 +37,12 @@ end
 %%% Here use Kmeans clustering. Due to non-convexity, we perform K iterations and choose the best one.
 NC = 4000; % #clusters
 rep = 8;
-rng default; % for reproducing results
-[idx,vocabularies] = kmeans(features,NC,'Replicates',rep);
+parpool('local',4);
+stream = RandStream('mlfg6331_64');
+options = statset('UseParallel',1,'UseSubstreams',1,'Streams',stream);
 
+[idx,vocabularies] = kmeans(features,NC,'Options',options,'Replicates',rep);
+
+delete(gcp('nocreate'));
+fprintf ('---finish...\n');
 end
