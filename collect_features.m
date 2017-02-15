@@ -1,15 +1,11 @@
-function features = collect_features(dataset, bodypart, subject)
+function features = collect_features(dataset, bodypart, subject,activity,tt)
 
 
 %%% dataset and parameter config
 ant_path = ['annotation/',dataset];
 info = importdata([ant_path,'/DataStructure.mat']);
 video_path = info.dataset_path;
-n_subs = info.num_subjects;
-n_acts = info.num_activities;
-n_trials = info.num_trials;
-act_list = importdata([ant_path,'/activity_list.txt']);
-fprintf('Dataset: %s\n',dataset);
+
 
 
 %%% video to image sequence config
@@ -20,53 +16,52 @@ L = 15; %% temporal length of the 3D cube
 
 %%% add path of hog grayscale image
 addpath(genpath('hog_mex'));
-
+n_trials = 3;
 
 features = [];
-for aa = 1:n_acts
-    for tt = 1:n_trials
-        tic
-        %%% read video frames and annotated bounding boxes
-        
-        video_file_name = sprintf(info.file_format,act_list{aa},subject,tt);
-        fprintf('- processing video: %s \n',video_file_name);
-        antDir = [ant_path,'/',video_file_name];
-        video = [video_path,'/',video_file_name];
-        ant_bb = importdata([antDir,'/rect.mat']);
-        fprintf('-- compute optical flow..\n');
-        imgseq = FrameExtraction(video,resize_factor);
-        
-        
-        %%% extract flow features MBH
-        fprintf('--extract mbh features in the bounding box..\n');
-        kk = 1;
-        for ii = 1:size(imgseq,3)-L
-            cube = [];
+
+tic
+%%% read video frames and annotated bounding boxes
+
+video_file_name = sprintf(info.file_format,activity,subject,tt);
+fprintf('- processing video: %s \n',video_file_name);
+antDir = [ant_path,'/',video_file_name];
+video = [video_path,'/',video_file_name];
+ant_bb = importdata([antDir,'/rect.mat']);
+fprintf('-- compute optical flow..\n');
+imgseq = FrameExtraction(video,resize_factor);
+
+
+%%% extract flow features MBH
+fprintf('--extract mbh features in the bounding box..\n');
+kk = 1;
+for ii = 1:size(imgseq,3)-L
+    cube = [];
 %             cubey = [];
-            if mod(ii,info.sampling_rate) == 0
-                    rect = round(ant_bb{kk}.(bodypart));
-                    xmin = rect(1);
-                    xmax = rect(1)+rect(3);
-                    ymin = rect(2);
-                    ymax = rect(2)+rect(4);
-                    cube(:,:,1:L+1) = imgseq(ymin:ymax,xmin:xmax,(ii-1):(ii+L-1));
-                    [cubex,cubey] = FlowExtractionFromImgSeq(cube);
+    if mod(ii,info.sampling_rate) == 0
+        rect = round(ant_bb{kk}.(bodypart));
+        xmin = rect(1);
+        xmax = rect(1)+rect(3);
+        ymin = rect(2);
+        ymax = rect(2)+rect(4);
+        cube(:,:,1:L+1) = imgseq(ymin:ymax,xmin:xmax,(ii-1):(ii+L-1));
+        [cubex,cubey] = FlowExtractionFromImgSeq(cube);
 
-                    %%% extract the feature here, where we perform dense
-                    %%% sampling
-                    mbh = ExtractMBH(cubex,cubey); %% the output is N*D matrix, rows are samples, cols are features.
+        %%% extract the feature here, where we perform dense
+        %%% sampling
+        mbh = ExtractMBH(cubex,cubey); %% the output is N*D matrix, rows are samples, cols are features.
 
-                    %%% todo stack the feature vector to the pool
-                    features = [features;mbh];
-               
-                kk = kk+1;
-            end
-        end
-        
-    timer = toc;
-    fprintf('--time cost = %f seconds\n',timer);
+        %%% todo stack the feature vector to the pool
+        features = [features;mbh];
+
+        kk = kk+1;
     end
 end
+
+timer = toc;
+fprintf('--time cost = %f seconds\n',timer);
+
+
 
 end
 
@@ -156,7 +151,7 @@ function mbh = ExtractMBH(cube_x,cube_y)
 %%% N*N*15 block is represented by concatenating the features of all
 %%% cells. (5) Here we dont consider multiple spatio pyramid, since
 %%% bodypart detectors already did that. 
-N = 32; ns = 2; nt = 3; W = 5; 
+N = 32; ns = 2; nt = 3; W = 20; %%% for head and torso, W=5; for person, W=20;
 
 [NY,NX,NT] = size(cube_x);
 mbh = [];

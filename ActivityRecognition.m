@@ -1,10 +1,8 @@
-function ActivityMonitoring(dataset,activity,subject,trial, method)
-%%% we monitor the activities via the motion energy in each bounding box
-%%% - within each bounding box, the motion energy is described by mean and
-%%% variance considering all pixels
-%%% - to compare two frames (two 3D volumes), we use chi-square distance
-%%% see I.Laptev et al., Learning Realistic Human Actions from Movies
-
+function model = ActivityRecognition_train(dataset,subject)
+%%% we train the activities models using part-based bag-of-features
+%%% we optimize the hyper-parameters of the SVMs via cross-validation and grid search
+%%% Input: the dataset and the subject to exclude. 
+%%% Output: the trained model 
 
 %%% dataset and parameter config
 ant_path = ['annotation/',dataset];
@@ -26,165 +24,99 @@ fprintf('Dataset: %s\n',dataset);
 % fprintf('-- compute optical flow..\n');
 
 
-%%% read video and read model
-addpath(genpath('exemplarsvm_lib'));
-addpath(genpath('poselets_matlab_april2013'));
-mm = load(sprintf('annotation/src_annotation_RochesterADL/esvm_head_2017.2.13/rochester_head_model/esvm_head_%i/models/head-svm-stripped.mat',subject)); %% the model when s1 is excluded
-video_file_name = sprintf(info.file_format,activity,subject,trial);
-fprintf('- processing video: %s \n',video_file_name);
-video = [video_path,'/',video_file_name];
-
+%%% read the learned vocabularies, which already excluded the test subject. 
 vocabularies_head = importdata(sprintf('vocabularies_head_subject_%i.mat',subject);
 vocabularies_torso = importdata(sprintf('vocabularies_torso_subject_%i.mat',subject);
 vocabularies_person = importdata(sprintf('vocabularies_person_subject_%i.mat',subject);
 
+%%% read extracted dense MBH features and create video features based on a temporal pyramid.
+features = InitFeatureSet(act_list);
+X= {};
+Y = [];
+idx = 1;
+for aa = 1:n_acts
+    for ss = 1:n_subs
+        if ss==subject
+            continue;
+        end
+        for tt = 1:n_trials
+            fea_head = import(sprintf('denseMBH_%sS%iR%i_head.mat',act_list{aa},ss,tt));
+            N = size(fea_head,1);
+            X{idx}.head = [Encoding(fea_head,vocabularies_head);
+                      Encoding(fea_head(1:round(N/2),:),vocabularies_head);
+                      Encoding(fea_head(round(N/2)+1:end,:),vocabularies_head);
+                      Encoding(fea_head(1:round(N/3),:),vocabularies_head);
+                      Encoding(fea_head(round(N/3)+1 : round(2*N/3),:),vocabularies_head);
+                      Encoding(fea_head(round(2*N/3)+1:end,:),vocabularies_head) ];
+           
+           
+            fea_torso = import(sprintf('denseMBH_%sS%iR%i_torso.mat',act_list{aa},ss,tt));
+            N = size(fea_torso,1);
+            X{idx}.torso = [Encoding(fea_torso,vocabularies_torso);
+                      Encoding(fea_torso(1:round(N/2),:),vocabularies_torso);
+                      Encoding(fea_torso(round(N/2)+1:end,:),vocabularies_torso);
+                      Encoding(fea_torso(1:round(N/3),:),vocabularies_torso);
+                      Encoding(fea_torso(round(N/3)+1 : round(2*N/3),:),vocabularies_torso);
+                      Encoding(fea_torso(round(2*N/3)+1:end,:),vocabularies_torso) ];
 
+            fea_person = import(sprintf('denseMBH_%sS%iR%i_person.mat',act_list{aa},ss,tt));
+            N = size(fea_person,1);
+            X{idx}.person = [Encoding(fea_person,vocabularies_person);
+                      Encoding(fea_person(1:round(N/2),:),vocabularies_person);
+                      Encoding(fea_person(round(N/2)+1:end,:),vocabularies_person);
+                      Encoding(fea_person(1:round(N/3),:),vocabularies_person);
+                      Encoding(fea_person(round(N/3)+1 : round(2*N/3),:),vocabularies_person);
+                      Encoding(fea_person(round(2*N/3)+1:end,:),vocabularies_person) ];
 
-
-
-%%% compute optical flow and extract statistics of motion energy
-kk = 1;
-vv = VideoReader(video);
-
-
-L = 15; %% consider 15 frames in the bounding box
-ii = 1;
-tsm = [];
-motion_energy_pre = {};
-feature_set_pre = {};
-dist = [];
-figure;
-while hasFrame(vv) 
-    frame = readFrame(vv);
-    frame = imresize(frame,0.5);
-    subplot(1,2,1);imshow(frame);drawnow;
-    if mod(ii,20) == 0
-%         rect_head = round(ant_bb{kk}.head);
-%         rect_torso = round(ant_bb{kk}.torso);
-%         rect_person = round(ant_bb{kk}.person);
-        %%% detect body parts and gives bounding boxes
-        [rect_head,~] = head_detection(frame,mm.models);
-        [rect_person,rect_torso,~,~] = body_detection(frame);
-        patch_head = [];
-        patch_torso = [];
-        patch_person = [];
-        feature_set = {};
-     
-        motion_energy = InitMotionEnergy();
-        flow_head = opticalFlowFarneback;
-        flow_torso = opticalFlowFarneback;
-        flow_person = opticalFlowFarneback;
-
-     
-        tsm = ii;
-        kk = kk+1;
-    end  
-    
-    
-    switch methed
-        case 'bag-of-feature'
-           if ~isempty(tsm)
-            if ((ii-tsm)<=L)
-                frame = rgb2gray(frame);
-                subplot(1,2,1);
-                rectangle('Position',rect_head,'EdgeColor','red','LineWidth',2);
-                rectangle('Position',rect_person,'EdgeColor','yellow','LineWidth',2);
-                rectangle('Position',rect_torso,'EdgeColor','blue','LineWidth',2);
-                drawnow;
-                patch_head = cat(3,patch_head,imcrop(frame,rect_head));
-                patch_torso = cat(3,patch_torso,imcrop(frame,rect_torso));
-                patch_person = cat(3,patch_person,imcrop(frame,rect_person));
-
-            end
-            end
-
-            if (ii-tsm)== L+1
-                %%% computer flow, dense sample the 3D patches, extract features.
-                [flowx_head, flowy_head] = FlowExtractionFromImgSeq(patch_head);
-                [flowx_torso, flowy_torso] = FlowExtractionFromImgSeq(patch_torso);
-                [flowx_person, flowy_person] = FlowExtractionFromImgSeq(patch_person);
                 
-                feature_head = ExtractMBH(flowx_head,flowy_head);
-                feature_torso = ExtractMBH(flowx_torso,flowy_torso);
-                feature_person = ExtractMBH(flowx_person,flowy_person);
+            Y(idx) = aa;
+            idx = idx+1;
 
-                %%% feature encoding using learned vocabularies
-                feature_set.head = Encoding(feature_head,vocabularies_head);
-                feature_set.torso = Encoding(feature_torso,vocabularies_torso);
-                feature_set.person = Encoding(feature_person,vocabularies_person);
-
-                %%% evaluate the Chi-Square distance
-                dist1 = Chi2Distance2(feature_set_pre, feature_set);
-                dist = [dist;dist1];
-
-                %%% visualize the curve
-                subplot(1,2,2);plot(dist);
-                drawnow;
-                feature_set_pre = feature_set;
-            end
-        
-
-
-        case 'MotionEnergy'
-            if ~isempty(tsm)
-            if ((ii-tsm)<=L)
-                frame = rgb2gray(frame);
-                subplot(1,2,1);
-                rectangle('Position',rect_head,'EdgeColor','red','LineWidth',2);
-                rectangle('Position',rect_person,'EdgeColor','yellow','LineWidth',2);
-                rectangle('Position',rect_torso,'EdgeColor','blue','LineWidth',2);
-                drawnow;
-                patch_head = imcrop(frame,rect_head);
-                patch_torso = imcrop(frame,rect_torso);
-                patch_person = imcrop(frame,rect_person);
-
-                flow_head = estimateFlow(opticFlow_head,patch_head);
-                flow_torso = estimateFlow(opticFlow_torso,patch_torso);
-                flow_person = estimateFlow(opticFlow_person,patch_person);
-                motion_energy.head.mean  = [motion_energy.head.mean; mean(flow_head.Magnitude(:))];
-        %         motion_energy.head.std  = [motion_energy.head.std; std(flow_head.Magnitude(:))];
-
-                motion_energy.torso.mean  = [motion_energy.torso.mean; mean(flow_torso.Magnitude(:))];
-        %         motion_energy.torso.std  = [motion_energy.torso.std; std(flow_torso.Magnitude(:))];
-
-                motion_energy.person.mean  = [motion_energy.person.mean; mean(flow_person.Magnitude(:))];
-        %         motion_energy.person.std  = [motion_energy.person.std; std(flow_person.Magnitude(:))];
-            end
-            end
-
-            if (ii-tsm)== L+1
-                %%% first excluding the first element and normalize the histogram
-                fnames = fieldnames(motion_energy);
-                for nnn = 1:length(fnames) 
-                    motion_energy.(fnames{nnn}).mean(1) = [];
-        %             motion_energy.(fnames{nnn}).std(1) = [];
-                    motion_energy.(fnames{nnn}).mean = motion_energy.(fnames{nnn}).mean/sum(motion_energy.(fnames{nnn}).mean);
-        %             motion_energy.(fnames{nnn}).std = motion_energy.(fnames{nnn}).std/sum(motion_energy.(fnames{nnn}).std);
-                end
-
-                dist1 = Chi2Distance(motion_energy_pre, motion_energy);
-                dist = [dist;dist1];
-
-                %%% visualize the curve
-                subplot(1,2,2);plot(dist);
-                drawnow;
-                motion_energy_pre = motion_energy;
-            end
-        
-
-
-
-
-
-
-        otherwise
-            error('no other method');
+        end
     end
-            
-    ii = ii+1;
+
 end
-    
+
+
+
+%%% train a multi-class svm and optimize the hyper-parameters
+%%% todo
+model = TrainSVM(X,Y);
+
 end
+
+
+
+
+
+
+
+
+function model = TrainSVM(X,Y)
+%%% X is a struct containing feature vectors in a context hierarchy.
+%%% Y is the action label.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+end
+
+
+
+
+
+
+
 
 
 
@@ -238,15 +170,13 @@ dist = dd;
 end
 
 
-function me = InitMotionEnergy()
-me.head.mean = [];
-me.head.std = [];
-
-me.torso.mean = [];
-me.torso.std = [];
-
-me.person.mean = [];
-me.person.std = [];
+function me = InitFeatureSet(act_list)
+me = {};
+for ii = 1:length(act_list)
+    me.(act_list{ii}).head = [];
+    me.(act_list{ii}).torso = [];
+    me.(act_list{ii}).person = [];
+end
 
 end
 
