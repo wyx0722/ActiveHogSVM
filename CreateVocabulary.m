@@ -10,7 +10,7 @@ n_subs = info.num_subjects;
 n_acts = info.num_activities;
 n_trials = info.num_trials;
 act_list = importdata([ant_path,'/activity_list.txt']);
-
+addpath(genpath('fcl-master/matlab/kmeans'));
 %%% load feature files
 sub_list = 1:n_subs;
 sub_list(sub_list==subject) = [];
@@ -36,15 +36,27 @@ end
 %%% perform clustering
 %%% Here use Kmeans clustering. Due to non-convexity, we perform K iterations and choose the best one.
 NC = 4000; % #clusters
-rep = 5;
-clus = parcluster('local');
-clus.NumWorkers = 7;
-parpool(clus,7);
-stream = RandStream('mlfg6331_64');
-options = statset('UseParallel',1,'UseSubstreams',1,'Streams',stream);
-fprintf('-- clustering....\n');
-[idx,vocabularies] = kmeans(features,NC,'Options',options,'Replicates',rep);
+%rep = 5;
+% clus = parcluster('local');
+% clus.NumWorkers = 7;
+% parpool(clus,7);
+% stream = RandStream('mlfg6331_64');
+% options = statset('UseParallel',1,'UseSubstreams',1,'Streams',stream);
+% fprintf('-- clustering....\n');
+% [idx,vocabularies] = kmeans(features,NC,'Options',options,'Replicates',rep);
 
-delete(gcp('nocreate'));
+%%% here we use the fcl lib for fast clustering. Initialization is kmeans++, and we dont run several times. 
+opts.seed = 0;                  % change starting position of clustering
+opts.algorithm = 'kmeans_optimized';     % change the algorithm to 'kmeans_optimized'
+opts.init = 'kmeans++';           % use kmeans++ as initialization
+opts.no_cores = -1;              % number of cores to use. for scientific experiments always use 1! -1 means using all
+opts.max_iter = 100;             % stop after 10 iterations
+opts.tol = 1e-5;                % change the tolerance to converge quicker
+opts.silent = true;             % do not output anything while clustering
+opts.remove_empty = true;       % remove empty clusters from resulting cluster center matrix
+opts.additional_params.bv_annz = 0.125;
+[ ~, vocabularies ] = fcl_kmeans(features, NC, opts);
+
+
 fprintf ('---finish...\n');
 end
