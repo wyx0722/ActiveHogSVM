@@ -36,11 +36,13 @@ end
 %%% perform clustering
 %%% Here use Kmeans clustering. Due to non-convexity, we perform K iterations and choose the best one.
 NC = 4000; % #clusters
-rep = 8;
-parpool('local',4);
+rep = 5;
+clus = parcluster('local');
+clus.NumWorkers = 7;
+parpool(clus,7);
 stream = RandStream('mlfg6331_64');
 options = statset('UseParallel',1,'UseSubstreams',1,'Streams',stream);
-
+fprintf('-- clustering....\n');
 [idx,vocabularies] = kmeans(features,NC,'Options',options,'Replicates',rep);
 
 delete(gcp('nocreate'));
