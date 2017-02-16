@@ -55,6 +55,7 @@ opts.tol = 1e-5;                % change the tolerance to converge quicker
 opts.silent = true;             % do not output anything while clustering
 opts.remove_empty = true;       % remove empty clusters from resulting cluster center matrix
 opts.additional_params.bv_annz = 0.125;
+fprintf('-- clustering (optimized kmeans)....\n');
 [ ~, vocabularies ] = fcl_kmeans(features, NC, opts);
 
 
