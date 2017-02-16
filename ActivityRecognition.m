@@ -14,7 +14,9 @@ n_trials = info.num_trials;
 act_list = importdata([ant_path,'/activity_list.txt']);
 fprintf('Dataset: %s\n',dataset);
 
-
+%%% add path for chi-square svm learning
+addpath(genpath('internal/'));
+addpath(genpath('libsvm/matlab'));
 % %%% read video and annotation
 % video_file_name = sprintf(info.file_format,activity,subject,trial);
 % fprintf('- processing video: %s \n',video_file_name);
@@ -25,9 +27,9 @@ fprintf('Dataset: %s\n',dataset);
 
 
 %%% read the learned vocabularies, which already excluded the test subject. 
-vocabularies_head = importdata(sprintf('vocabularies_head_subject_%i.mat',subject);
-vocabularies_torso = importdata(sprintf('vocabularies_torso_subject_%i.mat',subject);
-vocabularies_person = importdata(sprintf('vocabularies_person_subject_%i.mat',subject);
+vocabularies_head = importdata(sprintf('vocabularies_Rochester_S%i_head.mat',subject);
+vocabularies_torso = importdata(sprintf('vocabularies_Rochester_S%i_torso.mat',subject);
+vocabularies_person = importdata(sprintf('vocabularies_Rochester_S%i_person.mat',subject);
 
 %%% read extracted dense MBH features and create video features based on a temporal pyramid.
 features = InitFeatureSet(act_list);
@@ -40,7 +42,7 @@ for aa = 1:n_acts
             continue;
         end
         for tt = 1:n_trials
-            fea_head = import(sprintf('denseMBH_%sS%iR%i_head.mat',act_list{aa},ss,tt));
+            fea_head = import(sprintf('DenseMBH_Rochester/denseMBH_%sS%iR%i_head.mat',act_list{aa},ss,tt));
             N = size(fea_head,1);
             X{idx}.head = [Encoding(fea_head,vocabularies_head);
                       Encoding(fea_head(1:round(N/2),:),vocabularies_head);
@@ -50,7 +52,7 @@ for aa = 1:n_acts
                       Encoding(fea_head(round(2*N/3)+1:end,:),vocabularies_head) ];
            
            
-            fea_torso = import(sprintf('denseMBH_%sS%iR%i_torso.mat',act_list{aa},ss,tt));
+            fea_torso = import(sprintf('DenseMBH_Rochester/denseMBH_%sS%iR%i_torso.mat',act_list{aa},ss,tt));
             N = size(fea_torso,1);
             X{idx}.torso = [Encoding(fea_torso,vocabularies_torso);
                       Encoding(fea_torso(1:round(N/2),:),vocabularies_torso);
@@ -59,7 +61,7 @@ for aa = 1:n_acts
                       Encoding(fea_torso(round(N/3)+1 : round(2*N/3),:),vocabularies_torso);
                       Encoding(fea_torso(round(2*N/3)+1:end,:),vocabularies_torso) ];
 
-            fea_person = import(sprintf('denseMBH_%sS%iR%i_person.mat',act_list{aa},ss,tt));
+            fea_person = import(sprintf('DenseMBH_Rochester/denseMBH_%sS%iR%i_person.mat',act_list{aa},ss,tt));
             N = size(fea_person,1);
             X{idx}.person = [Encoding(fea_person,vocabularies_person);
                       Encoding(fea_person(1:round(N/2),:),vocabularies_person);
@@ -95,7 +97,12 @@ end
 function model = TrainSVM(X,Y)
 %%% X is a struct containing feature vectors in a context hierarchy.
 %%% Y is the action label.
+Xtrain = [];
+Ytrain = [];
 
+N = length(Y);
+for i = 1:N
+part = fieldnames(X{i});
 
 
 
