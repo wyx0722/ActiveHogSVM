@@ -182,7 +182,7 @@ cell_size = [ny,nx,l]./[ns,ns,nt];
 feature = [];
 
 for ll = 1:nt
-    tt = (ll-1)*nt+1;
+    tt = (ll-1)*cell_size(3)+1;
     cellx = cube_x( :,:, tt:tt+cell_size(3)-1);
     celly = cube_y( :,:, tt:tt+cell_size(3)-1);
     
