@@ -151,7 +151,7 @@ function mbh = ExtractMBH(cube_x,cube_y)
 %%% N*N*15 block is represented by concatenating the features of all
 %%% cells. (5) Here we dont consider multiple spatio pyramid, since
 %%% bodypart detectors already did that. 
-N = 32; ns = 2; nt = 3; W = 20; %%% for head and torso, W=5; for person, W=20;
+N = 32; ns = 2; nt = 3; W = 5; %%% for head and torso, W=5; for person, W=20;
 
 [NY,NX,NT] = size(cube_x);
 mbh = [];
