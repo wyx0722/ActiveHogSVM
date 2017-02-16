@@ -4,15 +4,15 @@
 
 %%
 % add path
-addpath('./internal/');
-addpath_folder('./internal/');
+addpath(genpath('internal/'));
+% addpath_folder('./internal/');
 
 %% load data:
 % note that this mat file is not included in ./mat folder. Please download
 % from http://www.eecs.qmul.ac.uk/~yf300/USAA/download/input.mat
 load('./mat/input.mat');
 
-addpath('./libsvm/matlab/');
+addpath(genpath('libsvm/matlab'));
 
 %% MFCC baseline:
 opt.nFold = 3; 
