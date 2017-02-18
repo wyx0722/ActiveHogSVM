@@ -54,8 +54,8 @@ mxArray *process(const mxArray *mximage, const mxArray *mxsbin) {
 
   // memory for HOG features
   int out[3];
-  out[0] = max(blocks[0], 0);
-  out[1] = max(blocks[1], 0);
+  out[0] = max(blocks[0]-2, 0);
+  out[1] = max(blocks[1]-2, 0);
   out[2] = 27+4;
   mxArray *mxfeat = mxCreateNumericArray(3, out, mxDOUBLE_CLASS, mxREAL);
   double *feat = (double *)mxGetPr(mxfeat);

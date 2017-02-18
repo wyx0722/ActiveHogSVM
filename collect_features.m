@@ -186,6 +186,10 @@ for ll = 1:nt
     cellx = cube_x( :,:, tt:tt+cell_size(3)-1);
     celly = cube_y( :,:, tt:tt+cell_size(3)-1);
     
+    %%% pad array here to avoid artifacts of gradient on image boundary
+    cellx = padarray(cellx,[size(cellx,1),size(cellx,2)]/2,'symmetric');
+    celly = padarray(celly,[size(celly,1),size(celly,2)]/2,'symmetric');
+    
     mbhx = zeros(ns,ns,31);
     mbhy = zeros(ns,ns,31);
     for tt = 1:size(cellx,3)
