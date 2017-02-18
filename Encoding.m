@@ -3,6 +3,8 @@ function des = Encoding(features,vocabularies)
 %%% features \in N*D, vocabularies \in NC*D
 %%% for simplicity, we only try hard voting encoding, following the paper of "dense trajectory...."
 
+vocabularies = (full(vocabularies))';
+
 dist = pdist2(features,vocabularies); % the default distance is euclidean
 
 [val,idx] = min(dist,[],2);

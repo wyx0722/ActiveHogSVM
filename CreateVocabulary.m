@@ -35,7 +35,7 @@ end
 
 %%% perform clustering
 %%% Here use Kmeans clustering. Due to non-convexity, we perform K iterations and choose the best one.
-NC = 4000; % #clusters
+NC = 100; % #clusters 4000 person, 100 head and torso
 %rep = 5;
 % clus = parcluster('local');
 % clus.NumWorkers = 7;

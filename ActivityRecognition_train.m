@@ -1,4 +1,4 @@
-function model = ActivityRecognition_train(dataset,subject)
+function [model,acc,cls,meta_res] = ActivityRecognition_train(dataset,subject)
 %%% we train the activities models using part-based bag-of-features
 %%% we optimize the hyper-parameters of the SVMs via cross-validation and grid search
 %%% Input: the dataset and the subject to exclude. 
@@ -15,8 +15,7 @@ act_list = importdata([ant_path,'/activity_list.txt']);
 fprintf('Dataset: %s\n',dataset);
 
 %%% add path for chi-square svm learning
-addpath(genpath('internal/'));
-addpath(genpath('libsvm/matlab'));
+addpath(genpath('SVM-chi-square-master/'));
 % %%% read video and annotation
 % video_file_name = sprintf(info.file_format,activity,subject,trial);
 % fprintf('- processing video: %s \n',video_file_name);
@@ -27,53 +26,92 @@ addpath(genpath('libsvm/matlab'));
 
 
 %%% read the learned vocabularies, which already excluded the test subject. 
-vocabularies_head = importdata(sprintf('vocabularies_Rochester_S%i_head.mat',subject);
-vocabularies_torso = importdata(sprintf('vocabularies_Rochester_S%i_torso.mat',subject);
-vocabularies_person = importdata(sprintf('vocabularies_Rochester_S%i_person.mat',subject);
+vocabularies_head = importdata(sprintf('vocabularies_Rochester_S%i_head.mat',subject));
+vocabularies_torso = importdata(sprintf('vocabularies_Rochester_S%i_torso.mat',subject));
+vocabularies_person = importdata(sprintf('vocabularies_Rochester_S%i_person.mat',subject));
 
 %%% read extracted dense MBH features and create video features based on a temporal pyramid.
 features = InitFeatureSet(act_list);
 X= {};
 Y = [];
+Xt = {};
+Yt = [];
 idx = 1;
+idxt = 1;
+fprintf('-- loading and encoding features according to vocabularies...\n');
 for aa = 1:n_acts
     for ss = 1:n_subs
         if ss==subject
-            continue;
-        end
         for tt = 1:n_trials
-            fea_head = import(sprintf('DenseMBH_Rochester/denseMBH_%sS%iR%i_head.mat',act_list{aa},ss,tt));
+            fprintf('--- loading testing data: %sS%iR%i.mat\n',act_list{aa},ss,tt);
+            fea_head = importdata(sprintf('DenseMBH_Rochester/denseMBH_%sS%iR%i_head.mat',act_list{aa},ss,tt));
             N = size(fea_head,1);
-            X{idx}.head = [Encoding(fea_head,vocabularies_head);
-                      Encoding(fea_head(1:round(N/2),:),vocabularies_head);
-                      Encoding(fea_head(round(N/2)+1:end,:),vocabularies_head);
-                      Encoding(fea_head(1:round(N/3),:),vocabularies_head);
-                      Encoding(fea_head(round(N/3)+1 : round(2*N/3),:),vocabularies_head);
+            Xt{idxt}.head = [Encoding(fea_head,vocabularies_head),...
+                      Encoding(fea_head(1:round(N/2),:),vocabularies_head) ,...
+                      Encoding(fea_head(round(N/2)+1:end,:),vocabularies_head),...
+                      Encoding(fea_head(1:round(N/3),:),vocabularies_head),...
+                      Encoding(fea_head(round(N/3)+1 : round(2*N/3),:),vocabularies_head),...
                       Encoding(fea_head(round(2*N/3)+1:end,:),vocabularies_head) ];
            
            
-            fea_torso = import(sprintf('DenseMBH_Rochester/denseMBH_%sS%iR%i_torso.mat',act_list{aa},ss,tt));
+            fea_torso = importdata(sprintf('DenseMBH_Rochester/denseMBH_%sS%iR%i_torso.mat',act_list{aa},ss,tt));
             N = size(fea_torso,1);
-            X{idx}.torso = [Encoding(fea_torso,vocabularies_torso);
-                      Encoding(fea_torso(1:round(N/2),:),vocabularies_torso);
-                      Encoding(fea_torso(round(N/2)+1:end,:),vocabularies_torso);
-                      Encoding(fea_torso(1:round(N/3),:),vocabularies_torso);
-                      Encoding(fea_torso(round(N/3)+1 : round(2*N/3),:),vocabularies_torso);
+            Xt{idxt}.torso = [Encoding(fea_torso,vocabularies_torso),...
+                      Encoding(fea_torso(1:round(N/2),:),vocabularies_torso),...
+                      Encoding(fea_torso(round(N/2)+1:end,:),vocabularies_torso),...
+                      Encoding(fea_torso(1:round(N/3),:),vocabularies_torso),...
+                      Encoding(fea_torso(round(N/3)+1 : round(2*N/3),:),vocabularies_torso),...
                       Encoding(fea_torso(round(2*N/3)+1:end,:),vocabularies_torso) ];
 
-            fea_person = import(sprintf('DenseMBH_Rochester/denseMBH_%sS%iR%i_person.mat',act_list{aa},ss,tt));
+            fea_person = importdata(sprintf('DenseMBH_Rochester/denseMBH_%sS%iR%i_person.mat',act_list{aa},ss,tt));
             N = size(fea_person,1);
-            X{idx}.person = [Encoding(fea_person,vocabularies_person);
-                      Encoding(fea_person(1:round(N/2),:),vocabularies_person);
-                      Encoding(fea_person(round(N/2)+1:end,:),vocabularies_person);
-                      Encoding(fea_person(1:round(N/3),:),vocabularies_person);
-                      Encoding(fea_person(round(N/3)+1 : round(2*N/3),:),vocabularies_person);
+            Xt{idxt}.person = [Encoding(fea_person,vocabularies_person),...
+                      Encoding(fea_person(1:round(N/2),:),vocabularies_person),...
+                      Encoding(fea_person(round(N/2)+1:end,:),vocabularies_person),...
+                      Encoding(fea_person(1:round(N/3),:),vocabularies_person),...
+                      Encoding(fea_person(round(N/3)+1 : round(2*N/3),:),vocabularies_person),...
                       Encoding(fea_person(round(2*N/3)+1:end,:),vocabularies_person) ];
 
-                
+            Yt(idxt) = aa;
+            idxt = idxt+1;
+
+        end
+
+        else 
+        for tt = 1:n_trials
+        fprintf('--- loading training data: %sS%iR%i.mat\n',act_list{aa},ss,tt);
+            fea_head = importdata(sprintf('DenseMBH_Rochester/denseMBH_%sS%iR%i_head.mat',act_list{aa},ss,tt));
+            N = size(fea_head,1);
+            X{idx}.head = [Encoding(fea_head,vocabularies_head),... 
+                      Encoding(fea_head(1:round(N/2),:),vocabularies_head) ,...
+                      Encoding(fea_head(round(N/2)+1:end,:),vocabularies_head),...
+                      Encoding(fea_head(1:round(N/3),:),vocabularies_head),...
+                      Encoding(fea_head(round(N/3)+1 : round(2*N/3),:),vocabularies_head),...
+                      Encoding(fea_head(round(2*N/3)+1:end,:),vocabularies_head) ];
+           
+           
+            fea_torso = importdata(sprintf('DenseMBH_Rochester/denseMBH_%sS%iR%i_torso.mat',act_list{aa},ss,tt));
+            N = size(fea_torso,1);
+            X{idx}.torso = [Encoding(fea_torso,vocabularies_torso),...
+                      Encoding(fea_torso(1:round(N/2),:),vocabularies_torso),...
+                      Encoding(fea_torso(round(N/2)+1:end,:),vocabularies_torso),...
+                      Encoding(fea_torso(1:round(N/3),:),vocabularies_torso),...
+                      Encoding(fea_torso(round(N/3)+1 : round(2*N/3),:),vocabularies_torso),...
+                      Encoding(fea_torso(round(2*N/3)+1:end,:),vocabularies_torso) ];
+
+            fea_person = importdata(sprintf('DenseMBH_Rochester/denseMBH_%sS%iR%i_person.mat',act_list{aa},ss,tt));
+            N = size(fea_person,1);
+            X{idx}.person = [Encoding(fea_person,vocabularies_person),...
+                      Encoding(fea_person(1:round(N/2),:),vocabularies_person),...
+                      Encoding(fea_person(round(N/2)+1:end,:),vocabularies_person),...
+                      Encoding(fea_person(1:round(N/3),:),vocabularies_person),...
+                      Encoding(fea_person(round(N/3)+1 : round(2*N/3),:),vocabularies_person),...
+                      Encoding(fea_person(round(2*N/3)+1:end,:),vocabularies_person) ];
+
             Y(idx) = aa;
             idx = idx+1;
 
+        end
         end
     end
 
@@ -83,40 +121,57 @@ end
 
 %%% train a multi-class svm and optimize the hyper-parameters
 %%% todo
-model = TrainSVM(X,Y);
+fprintf('-- training and testing for subject %i \n',subject);
+[model,acc,cls,meta_res] = TrainSVM(X,Y,Xt,Yt);
 
 end
 
 
-
-
-
-
-
-
-function model = TrainSVM(X,Y)
+function [bestmodel,acc,class_label,meta_res] = TrainSVM(X,Y,Xt,Yt)
 %%% X is a struct containing feature vectors in a context hierarchy.
 %%% Y is the action label.
+N = length(Y);
+Nt = length(Yt);
 Xtrain = [];
 Ytrain = [];
-
-N = length(Y);
+Xtest = [];
+Ytest = [];
+%%% concatenate vectors of different parts
 for i = 1:N
-part = fieldnames(X{i});
+  part = fieldnames(X{i});
+  tmp = [];
+  for ii = 1:1
+      tmp = cat(2,tmp, X{i}.person);
+  end
+  Xtrain(i,:) = tmp;
+end
+clear tmp
+for i = 1:Nt
+  part = fieldnames(Xt{i});
+  tmp = [];
+  for ii = 1:1
+      tmp = cat(2,tmp, Xt{i}.person);
+  end
+  Xtest(i,:) = tmp;
+end
+clear tmp
 
-
-
-
-
-
-
-
-
-
-
+Ytrain = Y;
+Ytest = Yt;
+%%% linear svm with 5-fold cross-validation and grid search
+%%% using the lib
+opt.nFold = 10;
+opt.kernel = 'RBF';
+Xtrain = CCV_normalize(Xtrain,1);
+Xtest = CCV_normalize(Xtest,1);
+[acc, prob_estimates, bestmodel, class_label, meta_res]=Fu_direct_SVM2(Xtrain, Xtest, Ytrain,Ytest,opt);
 
 
 end
+
+
+
+
 
 
 
