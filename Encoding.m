@@ -1,11 +1,11 @@
-function des = Encoding(features,vocabularies,method)
-%%% this function encode the original features into the occurrance histogram according to the learned vocabularies.
-%%% features \in N*D, vocabularies \in NC*D
+function des = Encoding(features,codebook,method)
+%%% this function encode the original features into the occurrance histogram according to the learned codebook.
+%%% features \in N*D, codebook \in NC*D
 %%% for simplicity, we only try hard voting encoding, following the paper of "dense trajectory...."
 
-vocabularies = (full(vocabularies))';
+codebook = (full(codebook))';
 
-dist = pdist2(features,vocabularies); % the default distance is euclidean
+dist = pdist2(features,codebook); % the default distance is euclidean
 if nargin == 2
     method = 'hard_voting';
 end

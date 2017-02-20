@@ -1,4 +1,4 @@
-function [model,acc,cls,meta_res] = ActivityRecognition_TrainTest_stip(vocabularies,stip_data_train,stip_data_test)
+function [model,acc,cls,meta_res] = ActivityRecognition(codebook,stip_data_train,stip_data_test)
 
 
 %%% specify feature data and labels
@@ -14,7 +14,7 @@ disp('-- encoding features based on the codebook...');
 for ii = 1:NN
     
     Ys(ii) = find(strcmp(act_list, stip_data_train{ii}.video(1:end-4)));
-    Xs(ii,:) = Encoding(stip_data_train{ii}.features(:,8:end),vocabularies);
+    Xs(ii,:) = Encoding(stip_data_train{ii}.features(:,8:end),codebook);
     stip_data_train{ii} = [];
     
 
@@ -23,7 +23,7 @@ end
 for ii = 1:NNt
     
     Yt(ii) = find(strcmp(act_list, stip_data_test{ii}.video(1:end-4)));
-    Xt(ii,:) = Encoding(stip_data_test{ii}.features(:,8:end),vocabularies);
+    Xt(ii,:) = Encoding(stip_data_test{ii}.features(:,8:end),codebook);
     stip_data_test{ii} = [];
 
 end
