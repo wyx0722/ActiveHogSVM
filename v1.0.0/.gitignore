@@ -1,0 +1,6 @@
+*.swp
+*.m~
+exemplarsvm/
+SSDPM_v1-1/
+*.mat
+DenseMBH_Rochester/
