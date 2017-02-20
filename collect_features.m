@@ -49,7 +49,7 @@ for ii = 1:size(imgseq,3)-L
 
         %%% extract the feature here, where we perform dense
         %%% sampling
-        mbh = ExtractMBH(cubex,cubey); %% the output is N*D matrix, rows are samples, cols are features.
+        mbh = ExtractMBH(cubex,cubey,bodypart); %% the output is N*D matrix, rows are samples, cols are features.
 
         %%% todo stack the feature vector to the pool
         features = [features;mbh];
@@ -138,7 +138,7 @@ flowy = flowy(:,:,2:end);
 end
 
 
-function mbh = ExtractMBH(cube_x,cube_y)
+function mbh = ExtractMBH(cube_x,cube_y,bodypart)
 
 %%% use the suggested parameters in the following paper:
 %%% H.Wang,A.Klaeser, C.Schmid, C.Liu DenseTrajectories and Motion Boundary
@@ -151,7 +151,19 @@ function mbh = ExtractMBH(cube_x,cube_y)
 %%% N*N*15 block is represented by concatenating the features of all
 %%% cells. (5) Here we dont consider multiple spatio pyramid, since
 %%% bodypart detectors already did that. 
-N = 32; ns = 2; nt = 3; W = 5; %%% for head and torso, W=5; for person, W=20;
+N = 32; ns = 2; nt = 3; %%% for head and torso, W=5; for person, W=20;
+
+switch bodypart
+    case 'head'
+      W=5;
+    case 'torso'
+      W=10;
+    case 'person'
+      W=20;
+    otherwise
+      error('no other body part option');
+end
+
 
 [NY,NX,NT] = size(cube_x);
 mbh = [];
