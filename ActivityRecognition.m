@@ -1,4 +1,4 @@
-function [model,acc,cls,meta_res] = ActivityRecognition(codebook,stip_data_train,stip_data_test)
+function [model,Yt,cls,meta_res] = ActivityRecognition(codebook,stip_data_train,stip_data_test)
 
 
 %%% specify feature data and labels
