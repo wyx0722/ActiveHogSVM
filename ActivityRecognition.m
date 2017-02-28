@@ -37,8 +37,7 @@ for ii = 1:NN
 %     ss = strsplit(stip_data_train{ii}.video,'_');
 %     Ys(ii) = find(strcmp(act_list, ss{2}));
     %%% if HMDB51 
-    ss = strsplit(stip_data_train{ii}.video,'_');
-    Ys(ii) = find(strcmp(act_list, ss{1}));
+    Ys(ii) = find(strcmp(act_list, stip_data_train{ii}.video));
     Xs(ii,:) = Encoding(stip_data_train{ii}.features(:,8:end),codebook);
     stip_data_train{ii} = [];
     
@@ -55,8 +54,7 @@ for ii = 1:NNt
     %Yt(ii) = find(strcmp(act_list, ss{2}));
 
     %%% if HMDB51
-    ss = strsplit(stip_data_test{ii}.video,'_');
-    Yt(ii) = find(strcmp(act_list, ss{1}));
+    Yt(ii) = find(strcmp(act_list, stip_data_train{ii}.video));
 
     Xt(ii,:) = Encoding(stip_data_test{ii}.features(:,8:end),codebook);
     stip_data_test{ii} = [];

@@ -31,12 +31,14 @@ for tt = trials
                tmp = ReadSTIPFile([workingDir,'/',video_list{vv},'.txt'],'1.0');
                stip_data_S{idxs}.features = tmp{1}.features;
                idxs = idxs+1;
+               clear tmp;
             elseif split_label(vv)==2 % testing
                stip_data_T{idxt}.video = act_list{kk};
                fprintf('- %s %i...\n',act_list{kk},split_label(vv));
                tmp = ReadSTIPFile([workingDir,'/',video_list{vv},'.txt'],'1.0');
                stip_data_T{idxt}.features = tmp{1}.features;
                idxt = idxt + 1;
+               clear tmp;
             else
                continue;
             end
