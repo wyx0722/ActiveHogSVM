@@ -14,7 +14,7 @@ end
 fprintf('-- #features=%i, feature_length=%i\n',size(features,1),size(features,2));
 
 %%% Due to complexity, we randomly choose N features, if the #features > N.
-N = 100000; % in previous settings, we set N = 200000
+N = 100000; % in previous settings, we set N = 200000 hdmb51, we wet 100000
 rng default;
 if size(features,1)>N
    kk = randperm(size(features,1));
