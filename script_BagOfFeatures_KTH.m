@@ -1,42 +1,50 @@
 clear;close all;
 clc;
 
-addpath(genpath('SVM-chi-square-master'));
-%%% this script implements the pipeline of bag of features for action
-%%% recognition in KTH
 
-reg_res = {};
-cm = zeros(6,6);
+option = GetDefaultConfig('KTH');
+
+%%% load third-part libs
+addpath(genpath('SVM-chi-square-master'));
+addpath(genpath('fcl-master/matlab/kmeans'));
+
+eval_res = {};
 
     
 %%% locate the extracted stip features
 files_trainval =...
-  sprintf('stip-2.0-linux/KTH_trainval.stip_harris3d.txt');
+  sprintf('%s/stip_features/KTH_trainval.stip_harris3d.txt',option.fileIO.dataset_path);
 files_test =...
-  sprintf('stip-2.0-linux/KTH_test.stip_harris3d.txt');
+  sprintf('%s/stip_features/KTH_test.stip_harris3d.txt',option.fileIO.dataset_path);
 fprintf('- reading extracted stip features...\n');
-stip_data_S = ReadSTIPFile(files_trainval);
-stip_data_T = ReadSTIPFile(files_test);
+stip_data_S = ReadSTIPFile(files_trainval,option);
+stip_data_T = ReadSTIPFile(files_test,option);
 
 fprintf('- generating codebook...\n');
 %%% notice that the codebook is generated only from training data
-codebook = CreateCodebook('KTH',1,stip_data_S);n
+[codebook,SUMD,opts,running_info,mu,sigma] = CreateCodebook(stip_data_S,option);
+eval_res.CodebookLearning.codebook = codebook;
+eval_res.CodebookLearning.SUMD = SUMD;
+eval_res.CodebookLearning.opts = opts;
+eval_res.CodebookLearning.running_info = running_info;
+eval_res.RawFeatureStandardization.mu = mu;
+eval_res.RawFeatureStandardization.sigma = sigma;
+    
 
 %%% encoding features, train and test linear svm
-[model,reg_res.Yt,reg_res.Yp,reg_res.meta_res]...
-    = ActivityRecognition(codebook,stip_data_S,stip_data_T);
-
-
-for ii = 1:length(reg_res{ss}.Yt)
-    cm(reg_res{ss}.Yt(ii),reg_res{ss}.Yp(ii)) = ...
-        cm(reg_res{ss}.Yt(ii),reg_res{ss}.Yp(ii))+1;
+[eval_res.svm.model,eval_res.svm.Yt,eval_res.svm.Yp,eval_res.svm.meta_res]...
+    = ActivityRecognition(codebook,stip_data_S,stip_data_T,mu,sigma,option);
+eval_res.svm.accuracy = sum(eval_res.svm.Yt==eval_res.svm.Yp')/length(eval_res.svm.Yt);
+cm = zeros(6,6);
+for ii = 1:length(eval_res.svm.Yt)
+    cm(eval_res.svm.Yt(ii),eval_res.svm.Yp(ii)) = ...
+        cm(eval_res.svm.Yt(ii),eval_res.svm.Yp(ii))+1;
 end
-%    figure;imagesc(cm);
-clear codebook stip_data_S stip_data_T
+eval_res.svm.confusion_matrix = cm;
+clear codebook stip_data_S stip_data_T 
 
-reg_res.confusion_matrix = cm;
-
-
+save(option.fileIO.eval_res_file,'eval_res');
+save(option.fileIO.option_file,'option');
 
 
 

@@ -1,10 +1,6 @@
-function stip_data = ReadSTIPFile(filename,vvv)
+function stip_data = ReadSTIPFile(filename,option)
 
-
-if nargin == 1
-    vvv ='2.0';
-end
-
+vvv = option.fileIO.stip_file_version;
 switch vvv
 case '2.0'
 stip_data = {};
@@ -62,6 +58,8 @@ error('stip file version is either 1.0 or 2.0.');
 end
 
 fclose(fd);
+
+
 
 
 end

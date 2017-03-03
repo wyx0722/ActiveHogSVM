@@ -1,14 +1,16 @@
-function des = Encoding(features,codebook,method)
+function des = Encoding(features,codebook,mu,sigma,option)
 %%% this function encode the original features into the occurrance histogram according to the learned codebook.
 %%% features \in N*D, codebook \in NC*D
 %%% for simplicity, we only try hard voting encoding, following the paper of "dense trajectory...."
 
 codebook = (full(codebook))';
+method = option.codebook.encoding_method;
+
+%%% standardization
+features = (features-repmat(mu,size(features,1),1))./repmat(sigma,size(features,1),1);
 
 dist = pdist2(features,codebook); % the default distance is euclidean
-if nargin == 2
-    method = 'hard_voting';
-end
+
 
 switch method
 case 'hard_voting'
