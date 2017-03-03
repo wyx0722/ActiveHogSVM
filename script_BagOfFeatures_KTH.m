@@ -20,7 +20,7 @@ stip_data_T = ReadSTIPFile(files_test);
 
 fprintf('- generating codebook...\n');
 %%% notice that the codebook is generated only from training data
-codebook = CreateCodebook('KTH',1,stip_data_S);
+codebook = CreateCodebook('KTH',1,stip_data_S);n
 
 %%% encoding features, train and test linear svm
 [model,reg_res.Yt,reg_res.Yp,reg_res.meta_res]...

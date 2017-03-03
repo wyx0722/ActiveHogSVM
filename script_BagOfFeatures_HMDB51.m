@@ -46,7 +46,7 @@ for tt = trials
     end
 
     %%% notice that the codebook is generated only from training data
-    codebook = CreateCodebook('HMDB51',ss,stip_data_S);
+    codebook = CreateCodebook('HMDB51',tt,stip_data_S);
     
     %%% encoding features, train and test linear svm
     [model{tt},reg_res{tt}.Yt,reg_res{tt}.Yp,reg_res{tt}.meta_res]...

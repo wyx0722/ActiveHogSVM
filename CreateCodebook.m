@@ -7,8 +7,9 @@ addpath(genpath('fcl-master/matlab/kmeans'));
 
 NN = length(stip_data);
 features = [];
+
 for ii = 1:NN
-    features = [features;stip_data{ii}.features(:,8:end)];
+    features = [features;stip_data{ii}.features(:,10:end)];
 end
 
 fprintf('-- #features=%i, feature_length=%i\n',size(features,1),size(features,2));
