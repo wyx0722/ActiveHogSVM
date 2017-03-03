@@ -7,11 +7,21 @@ addpath(genpath('SVM-chi-square-master'));
 trials = 1:3; % based on the 3 splits written in the paper or the website
 reg_res = {};
 model = {};
-data_path = '~/Videos/Dataset_HMDB51';
-split_path = '~/Videos/Dataset_HMDB51/testTrainMulti_7030_splits';
+
+%%% on local computer
+%data_path = '~/Videos/Dataset_HMDB51';
+%split_path = '~/Videos/Dataset_HMDB51/testTrainMulti_7030_splits';
+
+%%% on the pain server
+data_path = '/mnt/eshare/yzhang/Dataset_HMDB51';
+split_path = '/mnt/eshare/yzhang/Dataset_HMDB51/testTrainMulti_7030_splits';
+
 
 aa = dir(data_path);
 act_list = arrayfun( @(x) x.name, aa(3:end),'UniformOutput',false );
+act_list(strcmp(act_list,'testTrainMulti_7030_splits'))=[];
+act_list(strcmp(act_list,'uncompress.sh'))=[];
+
 for tt = trials
    
     %%% list the folders, each folder name corresponds to an action label
