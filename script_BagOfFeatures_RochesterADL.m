@@ -50,7 +50,7 @@ for ss = subjects
     clear codebook stip_data_S stip_data_T 
 end
 
-save(option.fileIO.eval_res_file,'eval_res');q
+save(option.fileIO.eval_res_file,'eval_res');
 save(option.fileIO.option_file,'option');
     
     

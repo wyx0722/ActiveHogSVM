@@ -2,42 +2,52 @@ clear;close all;
 clc;
 
 addpath(genpath('SVM-chi-square-master'));
+addpath(genpath('fcl-master/matlab/kmeans'));
 %%% this script implements the pipeline of bag of features for action
 %%% recognition in Weizmann
-subj_list ={'daria','denis','eli','ido','ira','lena','lyova','moshe','shahar'}; % in the implementation, we perform leave-one-subject-out.
-reg_res = {};
-cm = zeros(10,10);
+option = GetDefaultConfig('Weizmann');
+eval_res = {};
+
 for ss = 1:length(subj_list)
     
     %%% locate the extracted stip features
     files_training =...
-      sprintf('stip-2.0-linux/Weizmann_leave_subject_%s_out.stip_harris3d.txt',subj_list{ss});
+      sprintf('%s/stip_features/Weizmann_leave_subject_%s_out.stip_harris3d.txt',subj_list{ss});
     files_testing =...
       sprintf('stip-2.0-linux/Weizmann_subject_%s.stip_harris3d.txt',subj_list{ss});
     fprintf('- reading extracted stip features...\n');
-    stip_data_S = ReadSTIPFile(files_training);
-    stip_data_T = ReadSTIPFile(files_testing);
+    stip_data_S = ReadSTIPFile(files_training,option);
+    stip_data_T = ReadSTIPFile(files_testing,option);
     
     fprintf('- generating codebook...\n');
     %%% notice that the codebook is generated only from training data
-    codebook = CreateCodebook('Weizmann',ss,stip_data_S);
-    
+    [codebook,SUMD,opts,running_info,mu,sigma] = CreateCodebook(stip_data_S,option);
+    eval_res{ss}.CodebookLearning.codebook = codebook;
+    eval_res{ss}.CodebookLearning.SUMD = SUMD;
+    eval_res{ss}.CodebookLearning.opts = opts;
+    eval_res{ss}.CodebookLearning.running_info = running_info;
+    eval_res{ss}.RawFeatureStandardization.mu = mu;
+    eval_res{ss}.RawFeatureStandardization.sigma = sigma;
+    n
     %%% encoding features, train and test linear svm
-    [model,reg_res{ss}.Yt,reg_res{ss}.Yp,reg_res{ss}.meta_res]...
-        = ActivityRecognition(codebook,stip_data_S,stip_data_T);
-    
-
-    for ii = 1:length(reg_res{ss}.Yt)
-        cm(reg_res{ss}.Yt(ii),reg_res{ss}.Yp(ii)) = ...
-            cm(reg_res{ss}.Yt(ii),reg_res{ss}.Yp(ii))+1;
+    [eval_res{ss}.svm.model,eval_res{ss}.svm.Yt,eval_res{ss}.svm.Yp,eval_res{ss}.svm.meta_res]...
+        = ActivityRecognition(codebook,stip_data_S,stip_data_T,mu,sigma,option);
+    eval_res{ss}.svm.accuracy = sum(eval_res{ss}.svm.Yt==eval_res{ss}.svm.Yp')/length(eval_res{ss}.svm.Yt);
+    cm = zeros(10,10);
+    for ii = 1:length(eval_res{ss}.svm.Yt)
+        cm(eval_res{ss}.svm.Yt(ii),eval_res{ss}.svm.Yp(ii)) = ...
+            cm(eval_res{ss}.svm.Yt(ii),eval_res{ss}.svm.Yp(ii))+1;
     end
-%    figure;imagesc(cm);
-    clear codebook stip_data_S stip_data_T
+    eval_res{ss}.svm.confusion_matrix = cm;
+    clear codebook stip_data_S stip_data_T 
 end
-reg_res.confusion_matrix = cm;
 
-save('data_tmp3.mat','model','reg_res');
+save(option.fileIO.eval_res_file,'eval_res');
+save(option.fileIO.option_file,'option');
     
-    
+
+
+
+
     
 
