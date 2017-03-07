@@ -41,13 +41,12 @@ features = (features-repmat(mu,size(features,1),1))./repmat(sigma,size(features,
 
 
 %%% kmeans clustering with kmeans++ initialization and optimized algorithm.
-fprintf('-- start kmeans clustering...\n');
 NC = option.codebook.NC;
 %%% here we use the fcl lib for fast clustering. Initialization is kmeans++, and we dont run several times. 
 opts.seed = 0;                  % change starting position of clustering
 opts.algorithm = 'kmeans_optimized';     % change the algorithm to 'kmeans_optimized'
 opts.init = 'kmeans++';           % use kmeans++ as initialization
-opts.no_cores = 1;              % number of cores to use. for scientific experiments always use 1! -1 means using all
+opts.no_cores = 7;              % number of cores to use. for scientific experiments always use 1! -1 means using all
 opts.max_iter = 100;             % stop after 100 iterations
 opts.tol = 1e-5;                % change the tolerance to converge quicker
 opts.silent = true;             % do not output anything while clustering

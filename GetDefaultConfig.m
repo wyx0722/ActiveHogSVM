@@ -40,9 +40,16 @@ option.fileIO.option_file = sprintf('%s_option_%s.mat',dataset,timer);
 %%% the local feature vector does not include scales
 option.stip_features.including_scale = false; 
 option.stip_features.standardization = true;
+%% hyperfeatures architecture
+option.hyperfeatures.open = 0;
+option.hyperfeatures.encoding_W = 60; % receptive field window
+option.hyperfeatures.encoding_S = 30; % stride
+option.hyperfeatures.rfscaling = 1.2;  % In next layer, W(l) = rfscaling*W(l-1)
+option.hyperfeatures.num_layers = 2; % number of layers
+
 %% codebook generation
 option.codebook.maxsamples = 100000; %%% uplimit of samples for clustering.
-option.codebook.NC = 4000; %%% number of clusters to obtain
+option.codebook.NC = 50; %%% number of clusters to obtain
 option.codebook.encoding_method = 'hard_voting';
 %% svm classification
 option.svm.kernel = 'linear'; %%% svm kernel, can be linear, RBF or Chi-Square
