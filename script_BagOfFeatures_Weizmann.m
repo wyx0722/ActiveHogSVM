@@ -6,15 +6,17 @@ addpath(genpath('fcl-master/matlab/kmeans'));
 %%% this script implements the pipeline of bag of features for action
 %%% recognition in Weizmann
 option = GetDefaultConfig('Weizmann');
+option.stip_features.standardization = 0;
+option.stip_features.including_scale = 1;
 eval_res = {};
-
-for ss = 1:length(subj_list)
+subject_list = option.fileIO.subject_list;
+for ss = 1:length(option.fileIO.subject_list)
     
     %%% locate the extracted stip features
     files_training =...
-      sprintf('%s/stip_features/Weizmann_leave_subject_%s_out.stip_harris3d.txt',subj_list{ss});
+      sprintf('%s/stip_features/Weizmann_leave_subject_%s_out.stip_harris3d.txt',option.fileIO.dataset_path,subject_list{ss});
     files_testing =...
-      sprintf('stip-2.0-linux/Weizmann_subject_%s.stip_harris3d.txt',subj_list{ss});
+      sprintf('%s/stip_features/Weizmann_subject_%s.stip_harris3d.txt',option.fileIO.dataset_path,subject_list{ss});
     fprintf('- reading extracted stip features...\n');
     stip_data_S = ReadSTIPFile(files_training,option);
     stip_data_T = ReadSTIPFile(files_testing,option);
@@ -28,7 +30,7 @@ for ss = 1:length(subj_list)
     eval_res{ss}.CodebookLearning.running_info = running_info;
     eval_res{ss}.RawFeatureStandardization.mu = mu;
     eval_res{ss}.RawFeatureStandardization.sigma = sigma;
-    n
+    
     %%% encoding features, train and test linear svm
     [eval_res{ss}.svm.model,eval_res{ss}.svm.Yt,eval_res{ss}.svm.Yp,eval_res{ss}.svm.meta_res]...
         = ActivityRecognition(codebook,stip_data_S,stip_data_T,mu,sigma,option);

@@ -3,6 +3,8 @@ clc;
 
 
 option = GetDefaultConfig('KTH');
+option.stip_features.standardization = 1;
+option.stip_features.including_scale = 1;
 
 %%% load third-part libs
 addpath(genpath('SVM-chi-square-master'));

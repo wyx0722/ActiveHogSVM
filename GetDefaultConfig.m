@@ -11,23 +11,27 @@ option.fileIO.dataset_name = dataset;
 switch dataset
     case 'RochesterADL'
         act_list = importdata('annotation/Dataset_RochesterADL/activity_list.txt');
+        option.fileIO.stip_file_version = '2.0'; 
     case 'Weizmann'
         act_list = {'bend','jack','jump','pjump','run','side','skip','walk','wave1','wave2'};
+        option.fileIO.subject_list = {'daria','denis','eli','ido','ira','lena','lyova','moshe','shahar'};
+        option.fileIO.stip_file_version = '2.0'; 
     case 'KTH'
         act_list = {'boxing','handclapping','handwaving','jogging','running','walking'};
+        option.fileIO.stip_file_version = '2.0'; 
     case 'HMDB51'
-        data_path = option.fileIO.dataset_path;
+        dataset_path = option.fileIO.dataset_path;
         split_path = [dataset_path '/testTrainMulti_7030_splits'];
-        aa = dir(data_path);
+        aa = dir(dataset_path);
         act_list = arrayfun( @(x) x.name, aa(3:end),'UniformOutput',false );
         act_list(strcmp(act_list,'testTrainMulti_7030_splits'))=[];
         act_list(strcmp(act_list,'uncompress.sh'))=[];
+        option.fileIO.stip_file_version = '1.0'; 
     otherwise
         error('no other datasets so far...');
 end
 option.fileIO.act_list = act_list;
 %%% normally it is 2.0. But HMBD51 used 1.0 version.
-option.fileIO.stip_file_version = '2.0'; 
 
 %%% the file to store all results: codebook,svm and eval results.
 option.fileIO.eval_res_file = sprintf('%s_EvaluationResults_%s.mat',dataset,timer);
