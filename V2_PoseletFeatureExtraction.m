@@ -1,0 +1,13 @@
+function feature_des = V2_PoseletFeatureExtraction(feature_src)
+%%% convert stips in feature_src in feature_des
+option = V2_GetDefaultConfig('KTH');
+%% set up path and bound
+
+for i = 1 : length(feature_src);
+    vf = [option.fileIO.dataset_path,'/',feature_src{i}.video,'.avi'];
+    
+    [hit_list,img_set] = my_poselet_featuring_video(vf, option.poselet.config,...
+    option.poselet.is_visualization, ...
+    option.poselet.is_save_image,...
+    option.poselet.to_imgset,option.poselet.subsampling_factor,...
+    frame_scaling);
