@@ -18,8 +18,7 @@ else
 end
 
 
-for ii = 1:NN
-    
+for ii = 1:NN  
     switch option.fileIO.dataset_name
         case 'RochesterADL'
             Ys(ii) = find(strcmp(act_list, stip_data_train{ii}.video(1:end-4)));
@@ -35,16 +34,21 @@ for ii = 1:NN
             error('no othe option.');
             return;
     end
-      
     
-    Xs(ii,:) = Encoding(stip_data_train{ii}.features(:,dd:end),codebook,...
-        mu,sigma,option);
-    
+    if ~option.hyperfeatures.multilayerfeature
+        Xs(ii,:) = Encoding(stip_data_train{ii}.features(:,dd:end),codebook,...
+            mu,sigma,option);
+    else
+        last = Encoding(stip_data_train{ii}.features(:,dd:end),codebook,...
+            mu,sigma,option);
+        for ll = 1:option.hyperfeatures.num_layers-1
+            last = [last stip_data_train{ii}.globalfeatures{ll}];
+        end
+        
+        Xs(ii,:) = last ./ (sum(last)); % l1 -normalizing
+    end
     stip_data_train{ii} = [];
 end
-
-
-
 
 
 for ii = 1:NNt
@@ -65,23 +69,27 @@ for ii = 1:NNt
             return;
     end
       
-    
-    Xt(ii,:) = Encoding(stip_data_test{ii}.features(:,dd:end),codebook,...
-        mu,sigma,option);
+    if ~option.hyperfeatures.multilayerfeature
+        Xt(ii,:) = Encoding(stip_data_test{ii}.features(:,dd:end),codebook,...
+            mu,sigma,option);
+    else
+        last = Encoding(stip_data_test{ii}.features(:,dd:end),codebook,...
+            mu,sigma,option);
+        for ll = 1:option.hyperfeatures.num_layers-1
+            last = [last stip_data_test{ii}.globalfeatures{ll}];
+        end
+        
+        Xt(ii,:) = last ./ (sum(last)); % l1 -normalizing
+    end
     
     stip_data_test{ii} = [];
-
 end
-
-
-
 
 
 %%% processing data and train linear svm in a multi-class svm and optimize the hyper-parameters
 %%% todo
 fprintf('-- training and testing \n');
 [model,acc,cls,meta_res] = TrainSVM(Xs,Ys,Xt,Yt,option);
-
 end
 
 

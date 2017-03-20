@@ -8,7 +8,6 @@ method = option.codebook.encoding_method;
 
 %%% standardization
 features = (features-repmat(mu,size(features,1),1))./repmat(sigma,size(features,1),1);
-
 dist = pdist2(features,codebook); % the default distance is euclidean
 
 
@@ -22,19 +21,17 @@ case 'hard_voting'
 case 'soft_voting'
  beta = -1;
  val = exp(-beta .* dist);
- val_sum = repmat(sum(val,2),1,size(val,2));
- des = sum(val./val_sum) %%% sum pooling
-
+ des = val./repmat(sum(val,2),1,size(val,2));
+ des = sum(des);
 otherwise
  disp('error: no other option.');
 
 end
 
 
-
-
-des = des/sum(des);
-
-
+des = des/(sum(des)+1e-6);
+if sum(isnan(des))>0
+    fdsafasfdsa
+end
 %%% exclude the largest element, which correspondings to no motion
 end

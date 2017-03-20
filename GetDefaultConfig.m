@@ -38,19 +38,20 @@ option.fileIO.eval_res_file = sprintf('%s_EvaluationResults_%s.mat',dataset,time
 option.fileIO.option_file = sprintf('%s_option_%s.mat',dataset,timer);
 %% low-level stip features. Here we assume that you already
 %%% the local feature vector does not include scales
-option.stip_features.including_scale = false; 
+option.stip_features.including_scale = true; 
 option.stip_features.standardization = true;
 %% hyperfeatures architecture
-option.hyperfeatures.open = 0;
-option.hyperfeatures.encoding_W = 60; % receptive field window
-option.hyperfeatures.encoding_S = 30; % stride
-option.hyperfeatures.rfscaling = 1.2;  % In next layer, W(l) = rfscaling*W(l-1)
-option.hyperfeatures.num_layers = 2; % number of layers
-
+% option.hyperfeatures.use_trained_codebook = 1;
+option.hyperfeatures.encoding_W = 100; % receptive field window
+option.hyperfeatures.encoding_S = 10; % stride
+option.hyperfeatures.scaling = 1;  % In next layer, nc = nc/rfscaling
+option.hyperfeatures.num_layers = 1; % number of layer
+option.hyperfeatures.multilayerfeature = true; % combining global features from all layers
 %% codebook generation
 option.codebook.maxsamples = 100000; %%% uplimit of samples for clustering.
-option.codebook.NC = 50; %%% number of clusters to obtain
+option.codebook.NC = 500; %%% number of clusters to obtain
 option.codebook.encoding_method = 'hard_voting';
+option.codebook.visualize = 0;
 %% svm classification
 option.svm.kernel = 'linear'; %%% svm kernel, can be linear, RBF or Chi-Square
 option.svm.n_fold_cv = 5; %%% n-fode cross-validation for parameter selection

@@ -13,7 +13,6 @@ else
     dd = 10;
 end
 
-
 for ii = 1:NN
     features = [features;stip_data{ii}.features(:,dd:end)];
 end
@@ -36,9 +35,12 @@ else
     mu = zeros(1,size(features,2));
     sigma = ones(1,size(features,2));
 end
-features = (features-repmat(mu,size(features,1),1))./repmat(sigma,size(features,1),1);
+features = (features-repmat(mu,size(features,1),1))./repmat(sigma+1e-6,size(features,1),1);
 
-
+if option.codebook.visualize
+    figure(2);imagesc(features);drawnow;pause;
+end
+    
 
 %%% kmeans clustering with kmeans++ initialization and optimized algorithm.
 NC = option.codebook.NC;

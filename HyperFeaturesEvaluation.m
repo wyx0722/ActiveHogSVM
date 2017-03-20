@@ -1,6 +1,7 @@
-function deepmodel = HyperfeaturesExtraction(stip_data_S,...
-                                                 stip_data_T,...
-                                                 option)
+function eval_res = HyperFeaturesEvaluation(stip_data_S,stip_data_T,deepmodel,option)
+
+
+
 
 %%% extract hyper features from harris3d low-level features.
 %%% feature learning is performed using kmeans
@@ -25,12 +26,9 @@ for ll = 1:option.hyperfeatures.num_layers
     fprintf('- learning codebook..with %i clusters...\n',option.codebook.NC);
     [codebook,SUMD,opts,running_info,mu,sigma]=...
         CreateCodebook(stip_data_S,option);
-    deepmodel{ll}.CodebookLearning.codebook = codebook;
-    deepmodel{ll}.CodebookLearning.SUMD = SUMD;
-    deepmodel{ll}.CodebookLearning.opts = opts;
-    deepmodel{ll}.CodebookLearning.running_info = running_info;
-    deepmodel{ll}.RawFeatureStandardization.mu = mu;
-    deepmodel{ll}.RawFeatureStandardization.sigma = sigma;
+    codebook = deepmodel{ll}.CodebookLearning.codebook;
+    mu = deepmodel{ll}.RawFeatureStandardization.mu;
+    sigma = deepmodel{ll}.RawFeatureStandardization.sigma;
 
     if sum(sum(isnan(codebook)))~=0
         fdafa
@@ -49,8 +47,8 @@ for ll = 1:option.hyperfeatures.num_layers
         stip_data_T  = feature_encoding(codebook,stip_data_T,mu,sigma,option);
         %%% pooling (we do sum pooling here)
         fprintf('- feature pooling...\n');
-        stip_data_S = feature_pooling(stip_data_S,W,S,option,ll);
-        stip_data_T = feature_pooling(stip_data_T,W,S,option,ll);
+        stip_data_S = feature_pooling(stip_data_S,W,S,option);
+        stip_data_T = feature_pooling(stip_data_T,W,S,option);
         option.codebook.NC = round(option.codebook.NC/option.hyperfeatures.scaling);
         
     else
@@ -121,7 +119,7 @@ end
 % end
 
 
-function stip_des = feature_pooling(stip_src,W,S,option,ll)
+function stip_des = feature_pooling(stip_src,W,S,option)
 
 NN = length(stip_src);
 if option.stip_features.including_scale
@@ -134,11 +132,13 @@ stip_des = {};
 for ii = 1:NN
     stip_des{ii}.video = stip_src{ii}.video;
     time_stamp = stip_src{ii}.features(:,7);
-    tmp = sum(stip_src{ii}.features(:,dd:end),1); % sum pooling       
-    stip_des{ii}.globalfeatures{ll} = tmp./(sum(tmp) + 1e-6);
+    tmp = sum(stip_src{ii}.features(:,dd:end),1); % global sum-pooling
+    stip_des{ii}.globalfeature = tmp/(1e-6+sum(tmp));
+    
     idxx = 1;
     Nf = length(time_stamp);
     if W>=Nf
+        
         stip_des{ii}.features(idxx,1:dd-1) = ...
             stip_src{ii}.features(idxx,1:dd-1);    
         stip_des{ii}.features(idxx,dd:dd+size(tmp,2)-1) = tmp./(sum(tmp)+1e-6); %l1-normalize

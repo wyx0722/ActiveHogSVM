@@ -13,7 +13,7 @@ function matrix =CCV_normalize(matrix,flag)
 % the features.(e.g. some video does not have MFCC features)
 
 % eps: smoothing factor.
-eps=1e-30; 
+eps=1e-6; 
 
 if flag ==1
     % normalize each row:

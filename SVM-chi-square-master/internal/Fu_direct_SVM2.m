@@ -52,9 +52,13 @@ if(numel(unique(train_video_label))~=max(train_video_label))
 end
 
 %% Normalize data;
-fprintf('normalizing.....\n');
-Ytrain = ftrain(opt.norm_type, Xtrain);
-Ytest = ftest(opt.norm_type, Xtest);
+% fprintf('normalizing.....\n');
+% Ytrain = ftrain(opt.norm_type, Xtrain);
+% Ytest = ftest(opt.norm_type, Xtest);
+
+Ytrain = Xtrain;
+Ytest = Xtest;
+
 
 % do not do permutation in our experiments
 % if opt.permutation
